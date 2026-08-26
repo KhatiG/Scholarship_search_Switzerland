@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Funding Finder — Refugees & Asylum Seekers in Switzerland</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF1F4; --card:#FFFFFF; --ink:#16242C; --muted:#57686F; --line:#D6DEE4;
+    --brand:#0E6E6E; --brand-ink:#0A4F4F;
+    --open:#2E8B62; --open-bg:#E7F3EC; --open-line:#BFE1CD;
+    --verify:#B07C1E; --verify-bg:#FBF2DC; --verify-line:#EBD79E;
+    --closed:#A8514B; --closed-bg:#F7E9E7; --closed-line:#E7C6C2;
+    --info:#5E7480; --info-bg:#EAEFF2; --info-line:#CFDAE0;
+    --later:#5B5AA6; --later-bg:#ECECF7; --later-line:#CFCFEC;
+    --shadow:0 1px 2px rgba(20,40,50,.05),0 6px 20px rgba(20,40,50,.06);
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+
+  header.hero{padding:22px 0 26px;border-bottom:1px solid var(--line)}
+  .topbar{display:flex;justify-content:flex-end;align-items:center;padding-top:6px}
+  .lang{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:3px;gap:2px}
+  .lang button{border:0;background:transparent;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;
+    color:var(--muted);padding:5px 10px;border-radius:5px;cursor:pointer;letter-spacing:.04em}
+  .lang button[aria-pressed="true"]{background:var(--brand);color:#fff}
+  .lang button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--brand);font-weight:600;margin:26px 0 14px}
+  h1{font-family:'Fraunces',Georgia,serif;font-weight:500;font-size:clamp(30px,5vw,50px);line-height:1.04;
+    letter-spacing:-.01em;margin:0 0 14px;max-width:18ch}
+  .lede{font-size:clamp(16px,2.2vw,18px);color:var(--muted);max-width:62ch;margin:0}
+
+  .permit-block{margin-top:30px}
+  .permit-q{font-size:13px;font-weight:600;color:var(--muted);margin:0 0 10px;text-transform:uppercase;letter-spacing:.06em}
+  .permits{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:660px}
+  .permit{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:12px 10px 11px;text-align:left;
+    cursor:pointer;transition:.18s ease;display:flex;flex-direction:column;gap:3px;font-family:inherit}
+  .permit:hover{border-color:#9fb4bd;transform:translateY(-1px)}
+  .permit:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px}
+  .permit .code{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:20px;color:var(--ink)}
+  .permit .lab{font-size:11.5px;color:var(--muted);line-height:1.25}
+  .permit[aria-pressed="true"]{border-color:var(--brand);background:#F2F9F8;box-shadow:0 0 0 3px rgba(14,110,110,.10)}
+  .permit[aria-pressed="true"] .code{color:var(--brand-ink)}
+  .tally{margin-top:18px;font-size:15px;color:var(--muted);min-height:22px}
+  .tally b{color:var(--ink);font-weight:600}
+  .tally .num{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--open)}
+
+  .filters{position:sticky;top:0;z-index:20;background:rgba(238,241,244,.92);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);padding:14px 0}
+  .filters .wrap{display:flex;flex-wrap:wrap;gap:18px 26px;align-items:flex-end}
+  .fgroup{display:flex;flex-direction:column;gap:6px}
+  .fgroup>span{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .seg{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:3px;gap:2px}
+  .seg button{border:0;background:transparent;font-family:inherit;font-size:13.5px;color:var(--muted);
+    padding:6px 12px;border-radius:6px;cursor:pointer;transition:.15s;white-space:nowrap}
+  .seg button:hover{color:var(--ink)}
+  .seg button[aria-pressed="true"]{background:var(--brand);color:#fff;font-weight:500}
+  .seg button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+  .toggles{display:flex;flex-direction:column;gap:7px}
+  .tog{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink);cursor:pointer;user-select:none}
+  .tog input{accent-color:var(--brand);width:15px;height:15px;cursor:pointer}
+  .search{flex:1;min-width:180px}
+  .search input{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:9px;font-family:inherit;
+    font-size:14px;background:var(--card);color:var(--ink)}
+  .search input:focus{outline:2px solid var(--brand);outline-offset:1px;border-color:var(--brand)}
+
+  main{padding:30px 0 10px}
+  .grouphead{display:flex;align-items:center;gap:12px;margin:30px 0 14px}
+  .grouphead:first-child{margin-top:4px}
+  .grouphead h2{font-family:'Fraunces',serif;font-weight:500;font-size:22px;margin:0;letter-spacing:-.01em}
+  .grouphead .count{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted)}
+  .grouphead .rule{flex:1;height:1px;background:var(--line)}
+  .dot{width:10px;height:10px;border-radius:50%;flex:none}
+  .dot.open{background:var(--open)} .dot.verify{background:var(--verify)}
+  .dot.closed{background:var(--closed)} .dot.info{background:var(--info)} .dot.later{background:var(--later)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px 16px;
+    box-shadow:var(--shadow);border-left:4px solid var(--line);display:flex;flex-direction:column;gap:10px;
+    transition:transform .16s ease,box-shadow .16s ease}
+  .card:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(20,40,50,.06),0 12px 28px rgba(20,40,50,.10)}
+  .card.open{border-left-color:var(--open)} .card.verify{border-left-color:var(--verify)}
+  .card.closed{border-left-color:var(--closed)} .card.info{border-left-color:var(--info)} .card.later{border-left-color:var(--later)}
+  .card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .card h3{font-size:16.5px;font-weight:600;margin:0;line-height:1.25;letter-spacing:-.005em}
+  .seal{font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;white-space:nowrap;border:1px solid;letter-spacing:.01em}
+  .seal.open{color:var(--open);background:var(--open-bg);border-color:var(--open-line)}
+  .seal.verify{color:var(--verify);background:var(--verify-bg);border-color:var(--verify-line)}
+  .seal.closed{color:var(--closed);background:var(--closed-bg);border-color:var(--closed-line)}
+  .seal.info{color:var(--info);background:var(--info-bg);border-color:var(--info-line)}
+  .seal.later{color:var(--later);background:var(--later-bg);border-color:var(--later-line)}
+  .badges{display:flex;flex-wrap:wrap;gap:6px}
+  .badge{font-size:11px;color:var(--muted);background:#F1F5F7;border:1px solid var(--line);border-radius:6px;padding:2px 8px}
+  .badge.women{color:#8a3d6b;background:#faeef4;border-color:#efcfdf}
+  .amount{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink);font-weight:600}
+  .rows{display:flex;flex-direction:column;gap:7px;margin-top:2px}
+  .row{display:grid;grid-template-columns:82px 1fr;gap:10px;font-size:13.5px}
+  .row .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em;padding-top:1px}
+  .row .v{color:var(--ink)}
+  .fit{font-size:13.5px;color:var(--ink);background:#F5F8F8;border-radius:9px;padding:9px 11px;border:1px solid #E1EBEB}
+  .card a.link{font-size:13px;color:var(--brand);text-decoration:none;font-weight:500;display:inline-flex;
+    align-items:center;gap:5px;margin-top:1px;width:fit-content}
+  .card a.link:hover{text-decoration:underline}
+  .card a.link::after{content:"↗";font-size:12px}
+
+  details.mismatch-wrap{margin:34px 0 0}
+  details.mismatch-wrap>summary{cursor:pointer;font-family:'Fraunces',serif;font-size:20px;color:var(--muted);
+    list-style:none;display:flex;align-items:center;gap:10px}
+  details.mismatch-wrap>summary::-webkit-details-marker{display:none}
+  details.mismatch-wrap>summary::before{content:"›";font-size:22px;transition:.2s;display:inline-block}
+  details.mismatch-wrap[open]>summary::before{transform:rotate(90deg)}
+  details .grid{margin-top:14px}
+
+  .empty{text-align:center;padding:50px 20px;color:var(--muted)}
+  .empty h2{font-family:'Fraunces',serif;color:var(--ink);font-weight:500;margin:0 0 8px}
+
+  .strip{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;
+    margin:40px 0 10px;box-shadow:var(--shadow)}
+  .strip h2{font-family:'Fraunces',serif;font-weight:500;font-size:22px;margin:0 0 12px}
+  .strip ol{margin:0;padding-left:20px;display:grid;gap:9px}
+  .strip li{font-size:14.5px}
+  .strip li b{color:var(--brand-ink)}
+  footer{border-top:1px solid var(--line);margin-top:40px;padding:26px 0 60px;color:var(--muted);font-size:13px}
+  footer p{margin:0 0 8px;max-width:80ch}
+
+  @media (max-width:560px){
+    .permits{grid-template-columns:repeat(2,1fr)}
+    .row{grid-template-columns:74px 1fr}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="lang" id="lang" role="group" aria-label="Language">
+        <button data-lang="en" aria-pressed="true">EN</button>
+        <button data-lang="de" aria-pressed="false">DE</button>
+      </div>
+    </div>
+    <p class="eyebrow" data-i18n="eyebrow"></p>
+    <h1 data-i18n="h1"></h1>
+    <p class="lede" data-i18n="lede"></p>
+
+    <div class="permit-block">
+      <p class="permit-q" data-i18n="permitQ"></p>
+      <div class="permits" id="permits" role="group" aria-label="Permit">
+        <button class="permit" data-permit="N" aria-pressed="true"><span class="code">N</span><span class="lab" data-i18n="labN"></span></button>
+        <button class="permit" data-permit="F" aria-pressed="false"><span class="code">F</span><span class="lab" data-i18n="labF"></span></button>
+        <button class="permit" data-permit="B" aria-pressed="false"><span class="code">B</span><span class="lab" data-i18n="labB"></span></button>
+        <button class="permit" data-permit="C" aria-pressed="false"><span class="code">C</span><span class="lab" data-i18n="labC"></span></button>
+      </div>
+      <p class="tally" id="tally"></p>
+    </div>
+  </div>
+</header>
+
+<div class="filters">
+  <div class="wrap">
+    <div class="fgroup"><span data-i18n="fField"></span>
+      <div class="seg" id="field" role="group">
+        <button data-field="all" aria-pressed="true" data-i18n="segAll"></button>
+        <button data-field="business" aria-pressed="false" data-i18n="segBusiness"></button>
+        <button data-field="engineering" aria-pressed="false" data-i18n="segEng"></button>
+      </div>
+    </div>
+    <div class="fgroup"><span data-i18n="fLoc"></span>
+      <div class="seg" id="loc" role="group">
+        <button data-loc="all" aria-pressed="true" data-i18n="locAll"></button>
+        <button data-loc="bern" aria-pressed="false" data-i18n="locBern"></button>
+        <button data-loc="ch" aria-pressed="false" data-i18n="locCH"></button>
+        <button data-loc="online" aria-pressed="false" data-i18n="locOnline"></button>
+      </div>
+    </div>
+    <div class="fgroup"><span data-i18n="fRefine"></span>
+      <div class="toggles">
+        <label class="tog"><input type="checkbox" id="womenOnly"> <span data-i18n="togWomen"></span></label>
+        <label class="tog"><input type="checkbox" id="moveOn"> <span data-i18n="togMove"></span></label>
+      </div>
+    </div>
+    <div class="fgroup search"><span data-i18n="fSearch"></span>
+      <div class="search"><input type="search" id="q" data-i18n-ph="searchPh" aria-label="Search"></div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="wrap" id="results"></div>
+  <div class="wrap">
+    <div class="strip">
+      <h2 data-i18n="stratTitle"></h2>
+      <ol>
+        <li data-i18n="strat1"></li><li data-i18n="strat2"></li><li data-i18n="strat3"></li><li data-i18n="strat4"></li>
+      </ol>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p data-i18n="foot1"></p>
+    <p data-i18n="foot2"></p>
+  </div>
+</footer>
+
+<script>
+const I18N = {
+  en:{
+    eyebrow:"Switzerland · Higher education funding",
+    h1:"Which study funding is actually open to you?",
+    lede:"For refugees and asylum seekers building a degree in Switzerland. In this system your residence permit is the gate that decides most funding — so start there, and the list below shows only what fits your situation, honestly marked.",
+    permitQ:"1 · Choose your residence permit",
+    labN:"Asylum seeker (procedure ongoing)", labF:"Provisionally admitted", labB:"Recognised refugee / residence", labC:"Settled (Niederlassung)",
+    fField:"Field", fLoc:"Location", fRefine:"Refine", fSearch:"Search",
+    segAll:"All fields", segBusiness:"Business", segEng:"Engineering",
+    locAll:"All", locBern:"Bern", locCH:"Switzerland", locOnline:"Online",
+    togWomen:"Women-focused only", togMove:"Include options that need moving abroad",
+    searchPh:"Search by name or keyword…",
+    gOpen:"Open now", gVerify:"Worth verifying", gLater:"For later (once enrolled)", gClosed:"Opens at a higher status", gInfo:"Information & services",
+    sealOpen:"Open", sealVerify:"Verify", sealService:"Service", sealLater:"Later", sealOpensAt:"Opens at ", sealNoMatch:"Not a match",
+    kWho:"Who", kCovers:"Covers", kApply:"Apply", kDeadline:"Deadline", kOpensAt:"Opens at", kWhy:"Why",
+    openSite:"Open site", womenBadge:"Women",
+    tally:(p,o,v,t)=>`At status <b class="mono">${p}</b>: <span class="num">${o}</span> open now`+(v?`, <b>${v}</b> worth verifying`:"")+`, out of <b>${t}</b> shown.`,
+    tallyEmpty:"No funders match these filters — try widening them.",
+    mismatch:n=>`Not a match here — and why (${n})`,
+    emptyH:"Nothing matches those filters", emptyP:"Reset a filter or clear the search to see more options.",
+    stratTitle:"How to actually cover a year",
+    strat1:"<b>Stack, don't hunt for one.</b> No single fund covers a whole year — most give modest, often one-off amounts. Combine several education funds for fees, laptop and books with basic-needs funds for food and transport.",
+    strat2:"<b>Go through a caseworker.</b> Many funds require a support person's co-signature or accept requests only via a social service — and on an N permit you need the welfare office's consent to study anyway.",
+    strat3:"<b>Mind the offset.</b> The study-cost part of a grant is usually ignored by asylum welfare, but the living-cost part can reduce it. Clarify before accepting.",
+    strat4:"<b>The real unlock is status.</b> Moving from N to F or B opens the cantonal grant and many closed doors at once. Apply the day you become eligible.",
+    foot1:"<b>About this tool.</b> A wayfinding aid, not legal or financial advice, and not a complete list. Amounts, deadlines and eligibility are indicative from public sources (mid-2025 to 2026) and change often — always verify on each organisation's own page before applying. Programme names are kept in German where that's how you'll find them.",
+    foot2:"Feasibility marks reflect the selected permit. “Worth verifying” means a fund doesn't obviously exclude your status but you should confirm with them directly."
+  },
+  de:{
+    eyebrow:"Schweiz · Studienfinanzierung",
+    h1:"Welche Studienfinanzierung steht dir wirklich offen?",
+    lede:"Für Geflüchtete und Asylsuchende, die in der Schweiz ein Studium aufbauen. In diesem System entscheidet dein Aufenthaltsstatus über die meisten Finanzierungen – beginne also dort, und die Liste unten zeigt nur, was zu deiner Situation passt, ehrlich gekennzeichnet.",
+    permitQ:"1 · Wähle deinen Aufenthaltsausweis",
+    labN:"Asylsuchend (Verfahren läuft)", labF:"Vorläufig aufgenommen", labB:"Anerkannter Flüchtling / Aufenthalt", labC:"Niederlassung",
+    fField:"Fach", fLoc:"Ort", fRefine:"Verfeinern", fSearch:"Suche",
+    segAll:"Alle Fächer", segBusiness:"Wirtschaft", segEng:"Technik",
+    locAll:"Alle", locBern:"Bern", locCH:"Schweiz", locOnline:"Online",
+    togWomen:"Nur für Frauen", togMove:"Optionen mit Umzug ins Ausland einschliessen",
+    searchPh:"Nach Name oder Stichwort suchen…",
+    gOpen:"Jetzt offen", gVerify:"Zu prüfen", gLater:"Für später (nach Immatrikulation)", gClosed:"Öffnet sich bei höherem Status", gInfo:"Informationen & Dienste",
+    sealOpen:"Offen", sealVerify:"Prüfen", sealService:"Dienst", sealLater:"Später", sealOpensAt:"Ab ", sealNoMatch:"Kein Treffer",
+    kWho:"Wer", kCovers:"Deckt", kApply:"Bewerbung", kDeadline:"Frist", kOpensAt:"Ab Status", kWhy:"Warum",
+    openSite:"Website öffnen", womenBadge:"Frauen",
+    tally:(p,o,v,t)=>`Bei Status <b class="mono">${p}</b>: <span class="num">${o}</span> jetzt offen`+(v?`, <b>${v}</b> zu prüfen`:"")+`, von <b>${t}</b> angezeigt.`,
+    tallyEmpty:"Keine Fonds für diese Filter – erweitere sie.",
+    mismatch:n=>`Hier kein Treffer – und warum (${n})`,
+    emptyH:"Keine Treffer für diese Filter", emptyP:"Setze einen Filter zurück oder leere die Suche, um mehr zu sehen.",
+    stratTitle:"So deckst du ein Jahr wirklich",
+    strat1:"<b>Kombinieren statt die eine Quelle suchen.</b> Keine einzelne Stiftung deckt ein ganzes Jahr – die meisten geben bescheidene, oft einmalige Beträge. Kombiniere mehrere Bildungsfonds für Gebühren, Laptop und Bücher mit Grundbedarfs-Fonds für Verpflegung und Verkehr.",
+    strat2:"<b>Über eine Beratungsperson gehen.</b> Viele Fonds verlangen die Mitunterschrift einer Beratungsperson oder akzeptieren Gesuche nur über einen Sozialdienst – und mit Ausweis N brauchst du ohnehin die Zustimmung des Sozialdienstes zum Studium.",
+    strat3:"<b>Auf die Anrechnung achten.</b> Der Ausbildungskosten-Teil eines Beitrags wird von der Asyl-Sozialhilfe meist nicht angerechnet, der Lebenskosten-Teil kann sie aber kürzen. Vor der Zusage klären.",
+    strat4:"<b>Der eigentliche Hebel ist der Status.</b> Der Wechsel von N zu F oder B öffnet das kantonale Stipendium und viele Türen auf einmal. Beantrage es, sobald du berechtigt bist.",
+    foot1:"<b>Über dieses Tool.</b> Eine Orientierungshilfe, keine Rechts- oder Finanzberatung und keine vollständige Liste. Beträge, Fristen und Voraussetzungen sind Richtwerte aus öffentlichen Quellen (Mitte 2025 bis 2026) und ändern oft – prüfe alles vor der Bewerbung auf der Website der jeweiligen Organisation. Programmnamen bleiben auf Deutsch.",
+    foot2:"Die Machbarkeits-Markierungen beziehen sich auf den gewählten Ausweis. „Zu prüfen“ heisst, dass ein Fonds deinen Status nicht offensichtlich ausschliesst, du dies aber direkt bestätigen solltest."
+  }
+};
+
+function E(en,de){return {en,de};}
+const DATA = [
+ {kind:"program",scope:"bern",permits:["N","F","B","C"],verify:false,fields:["any"],link:"https://www.unibe.ch",
+  name:E("Compass UniBE (University of Bern)","Compass UniBE (Universität Bern)"),
+  amount:E("Course fee CHF 4,200 — not a grant","Kursgebühr CHF 4'200 – kein Stipendium"),
+  who:E("Refugees B/F/N/S with a foreign school-leaving certificate; German ~B1 to start; aiming for a Uni Bern degree.","Geflüchtete mit Status B/F/N/S; ausländisches Sek-II-Zeugnis; Deutsch ~B1 zum Start; Ziel: Studium an der Uni Bern."),
+  covers:E("One prep year: German toward C1, academic skills, admission prep.","Ein Vorbereitungsjahr: Deutsch Richtung C1, akademische Kompetenzen, Zulassungsvorbereitung."),
+  terms:E("Welfare-office consent if on asylum aid; B1 test in selection.","Zustimmung des Sozialdienstes bei Asyl-Sozialhilfe; B1-Test im Auswahlverfahren."),
+  deadline:E("Annual, winter–spring — verify","Jährlich, Winter–Frühling – prüfen"),
+  fit:E("Strongest on-ramp to a Bern degree and it accepts N. It's a fee, not a stipend — cover the fee via a foundation.","Stärkster Einstieg in ein Berner Studium und akzeptiert N. Es ist eine Gebühr, kein Stipendium – decke sie über eine Stiftung."),
+  badges:E(["University access","Prep year"],["Hochschulzugang","Vorbereitungsjahr"])},
+
+ {kind:"service",scope:"bern",permits:["N","F","B","C"],verify:false,fields:["any"],link:"https://www.unibe.ch",
+  name:E("Open Lecture Hall (Uni Bern / VSS)","Offener Hörsaal (Uni Bern / VSS)"),
+  amount:E("Free — no stipend","Kostenlos – kein Stipendium"),
+  who:E("Refugees with an academic background.","Geflüchtete mit akademischem Hintergrund."),
+  covers:E("Audit selected lectures, mentoring, get to know the university.","Ausgewählte Vorlesungen besuchen, Mentoring, die Universität kennenlernen."),
+  terms:E("Contact the student body; limited places.","Studierendenschaft kontaktieren; begrenzte Plätze."),
+  deadline:E("Rolling","Laufend"),
+  fit:E("Zero-cost way to build German, contacts and a track record while funding is sorted.","Kostenloser Weg, Deutsch, Kontakte und einen Nachweis aufzubauen, während die Finanzierung geklärt wird."),
+  badges:E(["Free access","Mentoring"],["Freier Zugang","Mentoring"])},
+
+ {kind:"service",scope:"ch",permits:["N","F","B","C"],verify:false,fields:["any"],link:"https://www.perspektiven-studium.ch",
+  name:E("Perspektiven – Studium (VSS)","Perspektiven – Studium (VSS)"),
+  amount:E("—","—"),
+  who:E("Refugees of all statuses heading to higher education.","Geflüchtete aller Status auf dem Weg zur Hochschule."),
+  covers:E("Advice on access and financing; a network of private foundations.","Beratung zu Zugang und Finanzierung; ein Netzwerk privater Stiftungen."),
+  terms:E("Contact them.","Kontaktieren."),
+  deadline:E("Rolling","Laufend"),
+  fit:E("Use them to get the current named list of foundations that fund regardless of status — your key lever at N.","Über sie die aktuelle Liste von Stiftungen erhalten, die unabhängig vom Status finanzieren – dein zentraler Hebel bei N."),
+  badges:E(["Guidance","Foundation network"],["Beratung","Stiftungsnetzwerk"])},
+
+ {kind:"service",scope:"ch",permits:["N","F","B","C"],verify:false,fields:["any"],link:"https://www.fluechtlingshilfe.ch",
+  name:E("Swiss Refugee Council (SFH/OSAR)","Schweizerische Flüchtlingshilfe (SFH/OSAR)"),
+  amount:E("—","—"),
+  who:E("Refugees and asylum seekers.","Geflüchtete und Asylsuchende."),
+  covers:E("Rights, education-access info, referral to local funds.","Rechte, Infos zum Bildungszugang, Vermittlung an lokale Fonds."),
+  terms:E("Contact regional advice service.","Regionale Beratungsstelle kontaktieren."),
+  deadline:E("Rolling","Laufend"),
+  fit:E("Good for orientation and to be pointed toward Bern-area funds.","Gut zur Orientierung und um auf Fonds in der Region Bern hingewiesen zu werden."),
+  badges:E(["Advice","Referral"],["Beratung","Vermittlung"])},
+
+ {kind:"basic",scope:"bern",permits:["N","F","B","C"],verify:true,fields:["any"],link:"https://www.caritas-bern.ch",
+  name:E("Caritas Bern","Caritas Bern"),
+  amount:E("Variable, usually small","Variabel, meist klein"),
+  who:E("People in financial need, including asylum seekers.","Menschen in finanzieller Not, inkl. Asylsuchende."),
+  covers:E("Sometimes course/exam fees, materials, language courses.","Manchmal Kurs-/Prüfungsgebühren, Material, Sprachkurse."),
+  terms:E("Apply via local office; needs assessment.","Über lokale Stelle; Bedarfsabklärung."),
+  deadline:E("Rolling","Laufend"),
+  fit:E("Realistic source to cover a specific cost (e.g. the Compass fee), not a whole degree.","Realistisch für eine einzelne Auslage (z.B. die Compass-Gebühr), nicht ein ganzes Studium."),
+  badges:E(["Hardship help","Language"],["Härtefallhilfe","Sprache"])},
+
+ {kind:"service",scope:"ch",permits:["N","F","B","C"],verify:true,fields:["any"],link:"https://www.heks.ch",
+  name:E("HEKS / EPER","HEKS / EPER"),
+  amount:E("Project-based","Projektbezogen"),
+  who:E("Refugees and migrants.","Geflüchtete und Migrant:innen."),
+  covers:E("Integration support; sometimes education bridging / language.","Integrationsunterstützung; manchmal Bildungsbrücken / Sprache."),
+  terms:E("Via regional programmes.","Über regionale Programme."),
+  deadline:E("Rolling","Laufend"),
+  fit:E("Check what HEKS runs in canton Bern; more bridging than degree funding.","Prüfen, was HEKS im Kanton Bern anbietet; eher Brücken- als Studienfinanzierung."),
+  badges:E(["Integration","Projects"],["Integration","Projekte"])},
+
+ {kind:"grant",scope:"ch",permits:["N","F","B","C"],verify:true,fields:["any"],link:"https://www.stiftungschweiz.ch",
+  name:E("Private education foundations (case-by-case)","Private Förderstiftungen (Einzelfallhilfe)"),
+  amount:E("A few hundred to several thousand CHF","Einige hundert bis mehrere tausend CHF"),
+  who:E("Students in need. Many are need-based and don't condition on permit status — verify each.","Studierende in Not. Viele sind bedarfsabhängig und knüpfen nicht an den Status an – jede prüfen."),
+  covers:E("Fees, materials, a living-cost shortfall.","Gebühren, Material, Lebenskosten-Fehlbetrag."),
+  terms:E("Usually proof of admission + a budget showing the gap + a motivation letter.","Meist Zulassungsnachweis + Budget mit Fehlbetrag + Motivationsschreiben."),
+  deadline:E("Varies","Variiert"),
+  fit:E("Because the cantonal grant is closed at N, these are your realistic cash source — apply to several.","Da das kantonale Stipendium bei N versperrt ist, sind dies deine realistische Geldquelle – bewirb dich bei mehreren."),
+  badges:E(["Individual grants"],["Einzelbeiträge"])},
+
+ {kind:"grant",scope:"bern",permits:["B","C"],verify:true,fields:["any"],link:"https://www.bkd.be.ch",
+  name:E("Cantonal study grant (Ausbildungsbeiträge, BKD Bern)","Kantonales Stipendium (Ausbildungsbeiträge, BKD Bern)"),
+  amount:E("Need-based; several thousand CHF/yr","Bedarfsabhängig; mehrere tausend CHF/Jahr"),
+  who:E("Swiss; C permit; B permit + 5 yrs residence; recognised refugees & stateless assigned to the canton. N & F generally excluded.","Schweizer:innen; Ausweis C; Ausweis B + 5 Jahre Wohnsitz; anerkannte Flüchtlinge & Staatenlose im Kanton. N & F i.d.R. ausgeschlossen."),
+  covers:E("Living costs + study-cost shortfall (partly a loan from year 4).","Lebenskosten + Ausbildungskosten-Fehlbetrag (ab Jahr 4 teils Darlehen)."),
+  terms:E("Financial need; recognised programme; grant-law residence in Bern; online via BE-Login.","Finanzielle Bedürftigkeit; anerkannte Ausbildung; stipendienrechtlicher Wohnsitz in Bern; online via BE-Login."),
+  deadline:E("30 Jun / 31 Dec","30. Juni / 31. Dez."),
+  fit:E("The big one — but only after you move to B/C or recognised-refugee status. Apply the moment you're eligible.","Der grosse Topf – aber erst nach Wechsel zu B/C oder anerkanntem Flüchtlingsstatus. Beantrage, sobald du berechtigt bist."),
+  badges:E(["Government grant","Largest pot"],["Staatliches Stipendium","Grösster Topf"])},
+
+ {kind:"program",scope:"online",permits:["N","F","B","C"],verify:false,fields:["any"],link:"https://kiron.ngo",
+  name:E("Kiron Open Higher Education","Kiron Open Higher Education"),
+  amount:E("Free — not a degree by itself","Kostenlos – selbst kein Abschluss"),
+  who:E("Refugees, asylum seekers, IDPs (proof of status).","Geflüchtete, Asylsuchende, intern Vertriebene (Statusnachweis)."),
+  covers:E("Online courses, language & soft skills, mentoring, university pathways.","Online-Kurse, Sprache & Soft Skills, Mentoring, Hochschulwege."),
+  terms:E("Sign up with proof of status.","Mit Statusnachweis anmelden."),
+  deadline:E("Rolling","Laufend"),
+  fit:E("Free skill-building and bridging from Switzerland; complements a degree, doesn't replace it.","Kostenloser Kompetenzaufbau von der Schweiz aus; ergänzt ein Studium, ersetzt es nicht."),
+  badges:E(["Free","Online"],["Kostenlos","Online"])},
+
+ {kind:"service",scope:"online",permits:["N","F","B","C"],verify:false,fields:["any"],link:"https://services.unhcr.org/opportunities",
+  name:E("UNHCR Opportunities & education portals","UNHCR Opportunities & Bildungsportale"),
+  amount:E("—","—"),
+  who:E("Refugees, asylum seekers, stateless.","Geflüchtete, Asylsuchende, Staatenlose."),
+  covers:E("Verified higher-education scholarship listings worldwide.","Weltweit geprüfte Hochschulstipendien-Einträge."),
+  terms:E("Browse and apply.","Durchsuchen und bewerben."),
+  deadline:E("Rolling","Laufend"),
+  fit:E("Re-check periodically for newly opened programmes that accept asylum seekers.","Regelmässig auf neue Programme prüfen, die Asylsuchende zulassen."),
+  badges:E(["Directory"],["Verzeichnis"])},
+
+ {kind:"grant",scope:"move",permits:[],fields:["any"],link:"https://www.unhcr.org",
+  name:E("UNHCR DAFI scholarship","UNHCR-DAFI-Stipendium"),
+  reason:E("Runs in developing host countries — not in donor countries like Switzerland.","Läuft in Entwicklungs-Aufnahmeländern – nicht in Geberländern wie der Schweiz."),
+  amount:E("Full undergrad support where it runs","Volle Bachelor-Unterstützung, wo es läuft"),
+  who:E("Recognised refugees under 28, no prior degree, in a country with a DAFI programme.","Anerkannte Flüchtlinge unter 28, ohne Vorabschluss, in einem Land mit DAFI-Programm."),
+  covers:E("Tuition + living in the country of asylum.","Gebühren + Lebenskosten im Asylland."),
+  terms:E("Via local UNHCR office in a DAFI country.","Über das lokale UNHCR-Büro in einem DAFI-Land."),
+  deadline:E("Country-specific","Länderspezifisch"),
+  fit:E("Listed so you don't chase it: DAFI doesn't operate in Switzerland.","Aufgeführt, damit du es nicht verfolgst: DAFI läuft nicht in der Schweiz."),
+  badges:E(["Host countries only"],["Nur Aufnahmeländer"])},
+
+ {kind:"institution",scope:"bern",permits:["N","F","B","C"],verify:true,fields:["business"],link:"https://www.unibe.ch",
+  name:E("University of Bern — BSc Business Administration","Universität Bern – BSc Betriebswirtschaft"),
+  amount:E("Tuition ~CHF 800–950 / semester","Studiengebühren ~CHF 800–950 / Semester"),
+  who:E("Recognised foreign Matura-equivalent + German C1; possible entrance exam.","Anerkannte ausländische Matura-Äquivalenz + Deutsch C1; evtl. Aufnahmeprüfung."),
+  covers:E("The degree (business management). No engineering here.","Der Studiengang (Betriebswirtschaft). Kein Wirtschaftsingenieurwesen."),
+  terms:E("C1 German; diploma recognition; Compass UniBE is the usual on-ramp.","Deutsch C1; Diplomanerkennung; Compass UniBE ist der übliche Einstieg."),
+  deadline:E("Enrolment ~30 Apr","Immatrikulation ~30. April"),
+  fit:E("Admission is possible regardless of permit if you meet the academics — funding is the constraint at N.","Zulassung unabhängig vom Status möglich, wenn die Akademik stimmt – bei N ist die Finanzierung das Problem."),
+  badges:E(["Institution","Degree"],["Institution","Studiengang"])},
+
+ {kind:"institution",scope:"bern",permits:["N","F","B","C"],verify:true,fields:["business","engineering"],link:"https://www.bfh.ch",
+  name:E("Bern University of Applied Sciences (BFH)","Berner Fachhochschule (BFH)"),
+  amount:E("~CHF 750 / semester","~CHF 750 / Semester"),
+  who:E("Recognised equivalent diploma + ~1 yr relevant work experience; German C1.","Anerkanntes gleichwertiges Diplom + ~1 Jahr einschlägige Berufserfahrung; Deutsch C1."),
+  covers:E("BSc Business Administration and BSc Industrial Engineering.","BSc Betriebsökonomie und BSc Wirtschaftsingenieurwesen."),
+  terms:E("C1 German; the work-experience rule is a hurdle at N (work is restricted) — clarify with admissions.","Deutsch C1; die Berufserfahrungs-Regel ist bei N eine Hürde (Arbeit eingeschränkt) – mit der Zulassung klären."),
+  deadline:E("Apply by 31 Jul","Anmeldung bis 31. Juli"),
+  fit:E("The only Bern option covering both business and industrial engineering.","Die einzige Berner Option für Wirtschaft und Wirtschaftsingenieurwesen."),
+  badges:E(["Institution","Both fields"],["Institution","Beide Fächer"])},
+
+ {kind:"grant",scope:"ch",permits:["N","F","B","C"],verify:true,fields:["any"],women:true,link:"https://www.swiss-soroptimist.ch",
+  name:E("Soroptimist International — Swiss Union & Club Bern","Soroptimist International – Swiss Union & Club Bern"),
+  amount:E("Variable — often a few thousand CHF","Variabel – oft einige tausend CHF"),
+  who:E("Qualified women, 25+, for training / (re-)entry into work; need-based.","Qualifizierte Frauen, 25+, für Weiterbildung / (Wieder-)Einstieg; bedarfsabhängig."),
+  covers:E("Part of training costs plus a mentor.","Teil der Ausbildungskosten plus eine Mentorin."),
+  terms:E("Apply to the Union or a local club with a study plan and proof of need.","Bei der Union oder einem lokalen Club mit Studienplan und Bedarfsnachweis bewerben."),
+  deadline:E("Varies by club","Je nach Club"),
+  fit:E("Strong fit — woman building a career. Confirm whether N status is accepted.","Starke Passung – Frau im Karriereaufbau. Kläre, ob Status N akzeptiert wird."),
+  badges:E(["Women","Mentoring"],["Frauen","Mentoring"])},
+
+ {kind:"grant",scope:"ch",permits:["N","F","B","C"],verify:true,fields:["business"],women:true,link:"https://www.zonta.org",
+  name:E("Zonta — Jane M. Klausman Women in Business","Zonta – Jane M. Klausman Women in Business"),
+  amount:E("USD 2,000–8,000","USD 2'000–8'000"),
+  who:E("Women enrolled in a business-management degree; open internationally.","Frauen in einem Wirtschaftsstudiengang; international offen."),
+  covers:E("Study costs.","Studienkosten."),
+  terms:E("Enrolled in a business programme; apply via a local Zonta club; essays + transcripts.","In einem Wirtschaftsprogramm eingeschrieben; über einen lokalen Zonta-Club; Essays + Zeugnisse."),
+  deadline:E("District deadlines — verify","District-Fristen – prüfen"),
+  fit:E("Best field-matched women's award for business. Needs enrolment first.","Bestes fachlich passendes Frauen-Stipendium für Wirtschaft. Setzt Immatrikulation voraus."),
+  badges:E(["Women","Business"],["Frauen","Wirtschaft"])},
+
+ {kind:"service",scope:"ch",permits:["N","F","B","C"],verify:true,fields:["any"],women:true,link:"https://www.bpw.ch",
+  name:E("BPW Switzerland","BPW Switzerland"),
+  amount:E("Variable","Variabel"),
+  who:E("Women in professional / business development.","Frauen in beruflicher / wirtschaftlicher Entwicklung."),
+  covers:E("Possible study support + a strong network.","Mögliche Studienunterstützung + starkes Netzwerk."),
+  terms:E("Via the Swiss / club structure.","Über die Schweizer / Club-Struktur."),
+  deadline:E("Varies","Variiert"),
+  fit:E("Networking plus possible small support for the business path.","Netzwerk plus mögliche kleine Unterstützung für den Wirtschafts-Weg."),
+  badges:E(["Women","Network"],["Frauen","Netzwerk"])},
+
+ {kind:"grant",scope:"online",permits:["N","F","B","C"],verify:false,fields:["business"],link:"https://www.uopeople.edu",
+  name:E("University of the People — Refugee scholarship","University of the People – Stipendium für Geflüchtete"),
+  amount:E("Tuition-free; scholarship covers course fees","Gebührenfrei; Stipendium deckt die Kursgebühren"),
+  who:E("Anyone identifying as a refugee or asylum seeker; school completion; taught in English.","Alle, die sich als geflüchtet/asylsuchend verstehen; Sek-II-Abschluss; Unterricht auf Englisch."),
+  covers:E("Effectively the whole cost when stacked — BSc Business Administration.","Faktisch die ganzen Kosten, wenn kombiniert – BSc Business Administration."),
+  terms:E("Apply and get admitted, then request the scholarship via admissions; show English.","Bewerben und zugelassen werden, dann Stipendium über die Zulassung anfragen; Englischnachweis."),
+  deadline:E("Rolling termly intakes","Laufende Semestereintritte"),
+  fit:E("The most viable funded Bachelor you can start now — English, online, from Switzerland, regardless of permit.","Der am ehesten machbare finanzierte Bachelor jetzt – Englisch, online, von der Schweiz aus, unabhängig vom Status."),
+  badges:E(["Online","Tuition-free","English"],["Online","Gebührenfrei","Englisch"])},
+
+ {kind:"grant",scope:"move",permits:[],fields:["any"],women:true,link:"https://www.aauw.org",
+  name:E("AAUW International Fellowships","AAUW International Fellowships"),
+  reason:E("Requires physically relocating to the US — not feasible during a Swiss asylum procedure.","Erfordert einen Umzug in die USA – während eines Schweizer Asylverfahrens nicht machbar."),
+  amount:E("USD 20,000–50,000","USD 20'000–50'000"),
+  who:E("Women non-US citizens for study in the US.","Frauen ohne US-Bürgerschaft, für ein Studium in den USA."),
+  covers:E("Study + living in the US.","Studium + Lebenshaltung in den USA."),
+  terms:E("US university admission.","Zulassung an einer US-Universität."),
+  deadline:E("Annual","Jährlich"),
+  fit:E("Park for the future, not now.","Für die Zukunft vormerken, nicht jetzt."),
+  badges:E(["Women","USA"],["Frauen","USA"])},
+
+ {kind:"grant",scope:"move",permits:[],fields:["engineering"],women:true,link:"https://www.facultyforthefuture.net",
+  name:E("Schlumberger — Faculty for the Future","Schlumberger – Faculty for the Future"),
+  reason:E("PhD/postdoc only — not a Bachelor.","Nur Doktorat/Postdoc – kein Bachelor."),
+  amount:E("Up to USD 50,000/yr","Bis zu USD 50'000/Jahr"),
+  who:E("Women from developing/emerging economies for PhD/postdoc in STEM.","Frauen aus Entwicklungs-/Schwellenländern für Doktorat/Postdoc in MINT."),
+  covers:E("PhD/postdoc costs.","Doktorats-/Postdoc-Kosten."),
+  terms:E("PhD/postdoc admission.","Zulassung Doktorat/Postdoc."),
+  deadline:E("Annual","Jährlich"),
+  fit:E("Not applicable now — wrong level.","Derzeit nicht anwendbar – falsche Stufe."),
+  badges:E(["Women","STEM","PhD"],["Frauen","MINT","Doktorat"])},
+
+ {kind:"grant",scope:"ch",permits:["N","F","B","C"],verify:true,fields:["any"],link:"https://gertrudrueggstiftung.ch",
+  name:E("Gertrud Rüegg Stiftung","Gertrud Rüegg Stiftung"),
+  amount:E("Fixed one-off amounts; repeatable","Feste Einmalbeträge; wiederholbar"),
+  who:E("First education in emergencies where state support isn't available. No permit or residence bar stated.","Erstausbildung in Notfällen, wo staatliche Hilfe fehlt. Keine Ausweis-/Wohnsitzbeschränkung angegeben."),
+  covers:E("A fixed contribution to study costs.","Ein fester Beitrag an die Studienkosten."),
+  terms:E("Form on the website; dossier by post.","Formular auf der Website; Gesuch per Post."),
+  deadline:E("—","—"),
+  fit:E("Strongest logic fit — being shut out of the cantonal grant at N is exactly the gap they fill. Say so.","Stärkste logische Passung – der Ausschluss vom kantonalen Stipendium bei N ist genau ihre Lücke. Sag es."),
+  badges:E(["First education","One-off"],["Erstausbildung","Einmalig"])},
+
+ {kind:"grant",scope:"bern",permits:["N","F","B","C"],verify:true,fields:["any"],migration:true,link:"",
+  name:E("Kathrin Hunziker Bieri Stiftung","Kathrin Hunziker Bieri Stiftung"),
+  amount:E("Not stated","Nicht angegeben"),
+  who:E("People with a migration background; single parents. German-language training only. No permit bar.","Personen mit Migrationshintergrund; Alleinerziehende. Nur deutschsprachige Ausbildungen. Keine Ausweisbeschränkung."),
+  covers:E("Education and integration.","Bildung und Integration."),
+  terms:E("Phone first (no website/email).","Zuerst telefonisch (keine Website/E-Mail)."),
+  deadline:E("—","—"),
+  fit:E("Strong thematic match — migration + education + integration, and a German-taught Bern degree qualifies.","Starke thematische Passung – Migration + Bildung + Integration, und ein deutschsprachiges Berner Studium qualifiziert."),
+  badges:E(["Migration","Integration"],["Migration","Integration"])},
+
+ {kind:"grant",scope:"ch",permits:["N","F","B","C"],verify:true,fields:["any"],link:"",
+  name:E("Emanuel Burckhardt Stiftung","Emanuel Burckhardt Stiftung"),
+  amount:E("Not stated","Nicht angegeben"),
+  who:E("People in hardship and/or with limited means. No permit bar stated.","Personen in Notlage und/oder mit beschränkten Mitteln. Keine Ausweisbeschränkung angegeben."),
+  covers:E("Education in the broadest sense.","Bildung im weitesten Sinne."),
+  terms:E("Dossier by post (no website).","Gesuch per Post (keine Website)."),
+  deadline:E("—","—"),
+  fit:E("Broad need-based fund; submit a clear budget and motivation.","Breiter bedarfsabhängiger Fonds; klares Budget und Motivation einreichen."),
+  badges:E(["Hardship"],["Härtefall"])},
+
+ {kind:"grant",scope:"ch",permits:["N","F","B","C"],verify:true,fields:["any"],link:"https://www.beobachter.ch/sos",
+  name:E("Stiftung SOS Beobachter","Stiftung SOS Beobachter"),
+  amount:E("Supplementary contribution","Ergänzender Beitrag"),
+  who:E("Needy persons resident in Switzerland; supplementary only. No permit bar stated.","Hilfsbedürftige mit Wohnsitz Schweiz; nur ergänzend. Keine Ausweisbeschränkung angegeben."),
+  covers:E("Education financing; emergency help; free legal advice.","Bildungsfinanzierung; Nothilfe; kostenlose Rechtsberatung."),
+  terms:E("Form + leaflets on the website; post or email.","Formular + Merkblätter auf der Website; Post oder E-Mail."),
+  deadline:E("—","—"),
+  fit:E("Useful top-up — and the free legal advice could help with your asylum questions too.","Nützliche Ergänzung – und die kostenlose Rechtsberatung hilft evtl. auch bei Asylfragen."),
+  badges:E(["Education","Free legal advice"],["Bildung","Kostenlose Rechtsberatung"])},
+
+ {kind:"grant",scope:"ch",permits:["N","F","B","C"],verify:true,fields:["any"],link:"https://www.vontobel-stiftung.ch",
+  name:E("Vontobel Stiftung","Vontobel Stiftung"),
+  amount:E("Scholarship + living-cost contribution","Stipendium + Lebenskosten-Beitrag"),
+  who:E("Destitute persons with residence AND first education in Switzerland. Apply in German or English.","Mittellose mit Wohnsitz UND Erstausbildung in der Schweiz. Bewerbung auf Deutsch oder Englisch."),
+  covers:E("Education and living costs.","Bildung und Lebenskosten."),
+  terms:E("Online platform; German or English.","Online-Plattform; Deutsch oder Englisch."),
+  deadline:E("—","—"),
+  fit:E("One of the few that names living-cost support, and you can apply in English.","Eine der wenigen mit Lebenskosten-Unterstützung, und Bewerbung auf Englisch möglich."),
+  badges:E(["Scholarship + living costs"],["Stipendium + Lebenskosten"])},
+
+ {kind:"grant",scope:"bern",permits:["N","F","B","C"],verify:true,fields:["any"],link:"https://jcstettler-stiftung.ch",
+  name:E("Jean Charles Stettler Stiftung","Jean Charles Stettler Stiftung"),
+  amount:E("Up to CHF 3,000/yr; repeatable","Bis zu CHF 3'000/Jahr; wiederholbar"),
+  who:E("Needy youth resident or in training in canton Bern. No permit bar stated.","Bedürftige Jugendliche mit Wohnsitz oder Ausbildung im Kanton Bern. Keine Ausweisbeschränkung angegeben."),
+  covers:E("Vocational training; after an EFZ, higher schools too.","Berufsausbildung; nach einem EFZ auch höhere Schulen."),
+  terms:E("Request forms at the listed address.","Formulare an der angegebenen Adresse anfordern."),
+  deadline:E("—","—"),
+  fit:E("Bern-local and repeatable — but confirm the 'youth' age fits and that an academic Bachelor qualifies.","Bern-lokal und wiederholbar – aber prüfen, ob das Alter als «Jugendliche» passt und ein akademischer Bachelor qualifiziert."),
+  badges:E(["Bern-local","Repeatable"],["Bern-lokal","Wiederholbar"])},
+
+ {kind:"grant",scope:"ch",permits:["N","F","B","C"],verify:true,fields:["health"],women:true,link:"https://www.suyana.ch",
+  name:E("Stiftung Suyana","Stiftung Suyana"),
+  amount:E("Contribution + low-interest loan","Beitrag + zinsgünstiges Darlehen"),
+  who:E("Pursuing a Swiss Sec-II qualification or SRK course; limited means. Special focus on migrant women.","Anstreben eines Schweizer Sek-II-Abschlusses oder SRK-Kurses; beschränkte Mittel. Fokus auf Migrantinnen."),
+  covers:E("Education costs (focus health/SRK).","Ausbildungskosten (Fokus Gesundheit/SRK)."),
+  terms:E("Form on suyana.ch → Schweiz → Bildung.","Formular auf suyana.ch → Schweiz → Bildung."),
+  deadline:E("—","—"),
+  fit:E("Migrant-women focus fits well; the catch is their health / Sec-II focus — a quick enquiry is worth it.","Migrantinnen-Fokus passt gut; Haken ist der Schwerpunkt Gesundheit / Sek-II – eine kurze Anfrage lohnt sich."),
+  badges:E(["Migrant women","Loans too"],["Migrantinnen","Auch Darlehen"])},
+
+ {kind:"basic",scope:"bern",permits:["N","F","B","C"],verify:true,fields:["any"],link:"https://fidma.ch",
+  name:E("Alfred Chambaty-Stiftung","Alfred Chambaty-Stiftung"),
+  amount:E("Basic-need top-ups","Grundbedarf-Zuschüsse"),
+  who:E("Ausweis: all (incl. N). Destitute people resident in the City of Bern.","Ausweis: alle (inkl. N). Mittellose mit Wohnsitz Stadt Bern."),
+  covers:E("Living / food gap — not tuition.","Lebens-/Verpflegungslücke – nicht Studiengebühren."),
+  terms:E("Dossier to the address; checklist on fidma.ch.","Gesuch an die Adresse; Checkliste auf fidma.ch."),
+  deadline:E("—","—"),
+  fit:E("Can cover the living / food part of your budget. Needs City-of-Bern residence.","Deckt den Lebens-/Verpflegungsteil des Budgets. Braucht Wohnsitz Stadt Bern."),
+  badges:E(["All permits","City of Bern","Basic needs"],["Alle Ausweise","Stadt Bern","Grundbedarf"])},
+
+ {kind:"basic",scope:"bern",permits:["N","F","B","C"],verify:true,fields:["any"],link:"https://fidma.ch",
+  name:E("Heidy und Heinrich Bebié-von Gunten-Stiftung","Heidy und Heinrich Bebié-von Gunten-Stiftung"),
+  amount:E("Basic-need top-ups","Grundbedarf-Zuschüsse"),
+  who:E("Ausweis: all (incl. N). Destitute people resident in the City of Bern.","Ausweis: alle (inkl. N). Mittellose mit Wohnsitz Stadt Bern."),
+  covers:E("Living / food gap — not tuition.","Lebens-/Verpflegungslücke – nicht Studiengebühren."),
+  terms:E("Dossier to the address; checklist on fidma.ch.","Gesuch an die Adresse; Checkliste auf fidma.ch."),
+  deadline:E("—","—"),
+  fit:E("Same office and profile as Chambaty — ask about both together.","Gleiches Büro und Profil wie Chambaty – beide zusammen anfragen."),
+  badges:E(["All permits","City of Bern","Basic needs"],["Alle Ausweise","Stadt Bern","Grundbedarf"])},
+
+ {kind:"grant",scope:"ch",permits:["N","F","B","C"],verify:true,fields:["any"],link:"https://blatterstiftung.ch",
+  name:E("Charles E. Blatter Stiftung","Charles E. Blatter Stiftung"),
+  amount:E("Study/living costs + housing help","Studien-/Lebenskosten + Wohnhilfe"),
+  who:E("Qualified low-means students, preferably Uni Zürich / ETHZ. Not before the 2nd semester.","Qualifizierte Studierende mit geringen Mitteln, vorzugsweise Uni Zürich / ETHZ. Nicht vor dem 2. Semester."),
+  covers:E("Living/study costs, exam fees, cheap housing.","Lebens-/Studienkosten, Prüfungsgebühren, günstiger Wohnraum."),
+  terms:E("Form on the website; twice a year.","Formular auf der Website; zweimal jährlich."),
+  deadline:E("Twice yearly","Zweimal jährlich"),
+  fit:E("Oriented to Zürich universities and only after 2 semesters — a maybe, not a priority.","Auf Zürcher Hochschulen ausgerichtet, erst ab dem 2. Semester – ein Vielleicht."),
+  badges:E(["Zürich-focused"],["Zürich-fokussiert"])},
+
+ {kind:"grant",scope:"ch",permits:["N","F","B","C"],verify:true,fields:["any"],link:"https://www.geigerstiftung.ch",
+  name:E("Manuela Geiger Stiftung","Manuela Geiger Stiftung"),
+  amount:E("Contribution","Beitrag"),
+  who:E("Ausweis: all (incl. N). Mainly residents of canton Aargau.","Ausweis: alle (inkl. N). Vor allem Wohnsitz Kanton Aargau."),
+  covers:E("Education contributions.","Ausbildungsbeiträge."),
+  terms:E("Form on the website; twice a year.","Formular auf der Website; zweimal jährlich."),
+  deadline:E("Twice yearly","Zweimal jährlich"),
+  fit:E("Permit-open (good) but focused on Aargau residents — weak fit from Bern.","Ausweisoffen (gut), aber auf Aargau fokussiert – schwache Passung von Bern."),
+  badges:E(["All permits","Aargau-focused"],["Alle Ausweise","Aargau-fokussiert"])},
+
+ {kind:"grant",scope:"ch",permits:["N","F","B","C"],verify:true,fields:["health"],women:true,link:"https://www.stiftungraphael.ch",
+  name:E("Stiftung Raphael","Stiftung Raphael"),
+  amount:E("Not stated","Nicht angegeben"),
+  who:E("Especially women 24–60, min 2 yrs in Switzerland, German-speaking.","Vor allem Frauen 24–60, mind. 2 Jahre in der Schweiz, deutschsprechend."),
+  covers:E("Training that enables you to support people / in the medical field.","Ausbildungen, die befähigen, Menschen zu unterstützen / im medizinischen Bereich."),
+  terms:E("Online platform.","Online-Plattform."),
+  deadline:E("—","—"),
+  fit:E("Women-focused (good) but the field is caring/medical — only fits if you pivot that way.","Frauenorientiert (gut), aber Feld betreuend/medizinisch – passt nur bei entsprechendem Wechsel."),
+  badges:E(["Women 24–60","2 yrs in CH"],["Frauen 24–60","2 Jahre in CH"])},
+
+ {kind:"grant",scope:"bern",permits:["N","F","B","C"],verify:true,fields:["any"],families:true,link:"https://www.familienhilfe-bern.ch",
+  name:E("Stiftung Familienhilfe","Stiftung Familienhilfe"),
+  amount:E("One-off, max CHF 1,500","Einmalig, max. CHF 1'500"),
+  who:E("Families in financial hardship in Bern, Jura or southern Solothurn.","Familien in finanzieller Not in Bern, Jura oder Südsolothurn."),
+  covers:E("Urgent expenses straining a family budget (incl. education).","Dringende Auslagen, die das Familienbudget sprengen (inkl. Ausbildung)."),
+  terms:E("Form on the website.","Formular auf der Website."),
+  deadline:E("—","—"),
+  fit:E("Only relevant if you support a family / children.","Nur relevant, wenn du eine Familie / Kinder hast."),
+  badges:E(["Families","One-off"],["Familien","Einmalig"])},
+
+ {kind:"grant",scope:"bern",permits:["B","C"],verify:true,later:true,fields:["any"],link:"https://www.unibe.ch",
+  name:E("Stiftung Sozialkasse der Universität Bern","Stiftung Sozialkasse der Universität Bern"),
+  amount:E("Bridging help","Überbrückungshilfe"),
+  who:E("Only enrolled Uni Bern students, 1–2 semesters before completion. Not if already on scholarships.","Nur immatrikulierte Uni-Bern-Studierende, 1–2 Semester vor Abschluss. Nicht bei bestehenden Stipendien."),
+  covers:E("Education contributions + emergency bridging.","Ausbildungsbeiträge + Nothilfe-Überbrückung."),
+  terms:E("Budget + financing plan by post.","Budget + Finanzierungsplan per Post."),
+  deadline:E("—","—"),
+  fit:E("Keep for your final year if you enrol at Uni Bern — not usable now.","Für dein letztes Jahr vormerken, falls du an der Uni Bern bist – jetzt nicht nutzbar."),
+  badges:E(["Uni Bern only","Final year"],["Nur Uni Bern","Letztes Jahr"])},
+
+ {kind:"grant",scope:"ch",permits:[],fields:["any"],link:"https://www.willy-mueller-foerderstiftung.ch",
+  name:E("Willy Müller Förderstiftung","Willy Müller Förderstiftung"),
+  reason:E("Explicitly excludes academic and commercial (business) studies.","Schliesst akademische und kaufmännische (Wirtschafts-)Ausbildungen ausdrücklich aus."),
+  amount:E("—","—"),
+  who:E("Ausweis all, age 18–40, min 2 yrs CH — but not academic/commercial fields.","Ausweis alle, Alter 18–40, mind. 2 Jahre CH – aber keine akademischen/kaufmännischen Fächer."),
+  covers:E("Crafts, trade or services training.","Aus-/Weiterbildung in Handwerk, Gewerbe oder Dienstleistung."),
+  terms:E("—","—"),
+  deadline:E("—","—"),
+  fit:E("Excluded by purpose: a business/engineering Bachelor is academic/commercial.","Durch den Zweck ausgeschlossen: ein Wirtschafts-/Technik-Bachelor ist akademisch/kaufmännisch."),
+  badges:E(["Crafts / trades only"],["Nur Handwerk/Gewerbe"])},
+
+ {kind:"grant",scope:"ch",permits:["B","C"],verify:false,fields:["any"],link:"https://www.maxhusmann.ch",
+  name:E("Dr. Max-Husmann-Stiftung","Dr. Max-Husmann-Stiftung"),
+  amount:E("CHF 100–1,000 / month to graduation","CHF 100–1'000 / Monat bis zum Abschluss"),
+  who:E("Academic first education; talented 15–30; permit B or C only; finish before 30.","Akademische Erstausbildung; begabt 15–30; nur Ausweis B oder C; Abschluss vor 30."),
+  covers:E("Monthly study support.","Monatliche Studienunterstützung."),
+  terms:E("Dossier by email.","Gesuch per E-Mail."),
+  deadline:E("—","—"),
+  fit:E("Right idea, wrong permit — excludes N. Revisit if you reach B/C.","Richtige Idee, falscher Ausweis – schliesst N aus. Bei B/C erneut prüfen."),
+  badges:E(["Permit B/C only"],["Nur Ausweis B/C"])},
+
+ {kind:"grant",scope:"bern",permits:["B","C"],verify:false,fields:["any"],link:"https://be.winterhilfe.ch",
+  name:E("Bernische Winterhilfe","Bernische Winterhilfe"),
+  amount:E("—","—"),
+  who:E("Ausweis from B; first vocational education; only when no public support.","Ausweis ab B; erste berufliche Bildung; nur ohne öffentliche Unterstützung."),
+  covers:E("Basic vocational training; bills; vouchers.","Grundausbildung; Rechnungen; Bons."),
+  terms:E("By post or PDF.","Per Post oder PDF."),
+  deadline:E("—","—"),
+  fit:E("Permit (from B) and level (vocational) don't fit a university Bachelor.","Ausweis (ab B) und Stufe (Berufsbildung) passen nicht zu einem Uni-Bachelor."),
+  badges:E(["From B","Vocational"],["Ab B","Berufsbildung"])},
+
+ {kind:"grant",scope:"ch",permits:["C"],verify:false,fields:["any"],link:"https://www.pestalozzi-stiftung.ch",
+  name:E("Louise-Misteli / Pestalozzi-Stiftung","Louise-Misteli / Pestalozzi-Stiftung"),
+  amount:E("—","—"),
+  who:E("Ausweis from C (Pestalozzi also mountain regions, age ≤30).","Ausweis ab C (Pestalozzi zudem Bergregionen, Alter ≤30)."),
+  covers:E("First education / Sek II to Master.","Erstausbildung / Sek II bis Master."),
+  terms:E("By phone / website.","Telefonisch / Website."),
+  deadline:E("—","—"),
+  fit:E("Permit from C excludes N.","Ausweis ab C schliesst N aus."),
+  badges:E(["From C"],["Ab C"])},
+
+ {kind:"grant",scope:"bern",permits:["B","C"],verify:true,fields:["health"],link:"https://www.bkd.be.ch",
+  name:E("Arthur Schneider Fonds / Ausbildungs-Fonds Stadt Bern","Arthur Schneider Fonds / Ausbildungs-Fonds Stadt Bern"),
+  amount:E("—","—"),
+  who:E("5 years in Switzerland required (Schneider also health field + grant-law residence).","5 Jahre in der Schweiz vorausgesetzt (Schneider zudem Gesundheitsfach + stipendienrechtlicher Wohnsitz)."),
+  covers:E("Education (Schneider: health sector).","Ausbildung (Schneider: Gesundheitsbereich)."),
+  terms:E("Via BKD / by post.","Über BKD / per Post."),
+  deadline:E("—","—"),
+  fit:E("The 5-year residence rule (and field, for Schneider) rules these out at N.","Die 5-Jahres-Regel (und bei Schneider das Fach) schliesst diese bei N aus."),
+  badges:E(["5 yrs residence"],["5 Jahre Wohnsitz"])},
+
+ {kind:"grant",scope:"ch",permits:[],fields:["health"],link:"",
+  name:E("Health / medicine / nursing-only funds","Fonds nur für Gesundheit/Medizin/Pflege"),
+  reason:E("Tied to health, medicine, nursing or fine arts — not business or engineering.","An Gesundheit, Medizin, Pflege oder Kunst gebunden – nicht Wirtschaft oder Technik."),
+  amount:E("—","—"),
+  who:E("Kobler-Reinfeldt (SBK), Röthlisberger-Schmid, Suzanne & Ernst Zingg, de Harries.","Kobler-Reinfeldt (SBK), Röthlisberger-Schmid, Suzanne & Ernst Zingg, de Harries."),
+  covers:E("Care / medical / arts training.","Pflege- / Medizin- / Kunstausbildungen."),
+  terms:E("—","—"),
+  deadline:E("—","—"),
+  fit:E("Wrong field for a business or engineering degree.","Falsches Fach für einen Wirtschafts- oder Technikabschluss."),
+  badges:E(["Wrong field"],["Falsches Fach"])},
+
+ {kind:"grant",scope:"ch",permits:[],fields:["any"],link:"",
+  name:E("Target-group mismatch funds","Fonds mit Zielgruppen-Mismatch"),
+  reason:E("Target group or purpose doesn't include this case.","Zielgruppe oder Zweck umfasst diesen Fall nicht."),
+  amount:E("—","—"),
+  who:E("Dr. Silvain Brunschwig (Israeli origin); E. O. Kilcher (Swiss abroad); Glückskette & SRK Einzelhilfe (no education funding).","Dr. Silvain Brunschwig (israelische Herkunft); E. O. Kilcher (Auslandschweizer:innen); Glückskette & SRK Einzelhilfe (keine Bildungsfinanzierung)."),
+  covers:E("—","—"),
+  terms:E("—","—"),
+  deadline:E("—","—"),
+  fit:E("Don't apply — their target groups or purposes don't include you.","Nicht bewerben – Zielgruppen oder Zwecke umfassen dich nicht."),
+  badges:E(["Not applicable"],["Nicht anwendbar"])}
+];
+
+const RANK={N:0,F:1,B:2,C:3};
+const state={lang:"en",permit:"N",field:"all",loc:"all",women:false,move:false,q:""};
+const T=()=>I18N[state.lang];
+const womenRe=/women|frauen|migrant|migrantinnen/i;
+
+function statusFor(it,permit){
+  if(it.kind==="service") return "info";
+  if(it.later) return "later";
+  if(it.permits.length===0) return "closed";
+  if(it.permits.includes(permit)) return it.verify?"verify":"open";
+  return "closed";
+}
+function passesFilters(it){
+  if(state.field!=="all" && !(it.fields.includes(state.field)||it.fields.includes("any"))) return false;
+  if(state.loc!=="all" && it.scope!==state.loc) return false;
+  if(!state.move && it.scope==="move") return false;
+  if(state.women && !it.women) return false;
+  if(state.q){
+    const L=state.lang;
+    const hay=(it.name[L]+" "+it.who[L]+" "+it.covers[L]+" "+it.fit[L]+" "+it.badges[L].join(" ")).toLowerCase();
+    if(!hay.includes(state.q.toLowerCase())) return false;
+  }
+  return true;
+}
+function cardHTML(it,st){
+  const L=state.lang, t=T();
+  const seal={open:t.sealOpen,verify:t.sealVerify,info:t.sealService,later:t.sealLater,
+    closed:(it.permits.length? t.sealOpensAt+it.permits.slice().sort((a,b)=>RANK[a]-RANK[b])[0] : t.sealNoMatch)}[st];
+  const badges=it.badges[L].map(b=>`<span class="badge${womenRe.test(b)?' women':''}">${b}</span>`).join("");
+  const openHint=(st==="closed"&&it.permits.length)
+    ?`<div class="row"><div class="k">${t.kOpensAt}</div><div class="v mono">${it.permits.slice().sort((a,b)=>RANK[a]-RANK[b]).join(" · ")}</div></div>`:"";
+  const reason=it.reason?`<div class="row"><div class="k">${t.kWhy}</div><div class="v">${it.reason[L]}</div></div>`:"";
+  const dash="—";
+  const terms=(it.terms[L]&&it.terms[L]!==dash)?`<div class="row"><div class="k">${t.kApply}</div><div class="v">${it.terms[L]}</div></div>`:"";
+  const dl=(it.deadline[L]&&it.deadline[L]!==dash)?`<div class="row"><div class="k">${t.kDeadline}</div><div class="v">${it.deadline[L]}</div></div>`:"";
+  const link=it.link?`<a class="link" href="${it.link}" target="_blank" rel="noopener">${t.openSite}</a>`:"";
+  return `<article class="card ${st}">
+    <div class="top"><h3>${it.name[L]}</h3><span class="seal ${st}">${seal}</span></div>
+    <div class="badges">${badges}</div>
+    <div class="amount">${it.amount[L]||""}</div>
+    <div class="rows">
+      <div class="row"><div class="k">${t.kWho}</div><div class="v">${it.who[L]}</div></div>
+      <div class="row"><div class="k">${t.kCovers}</div><div class="v">${it.covers[L]}</div></div>
+      ${terms}${dl}${openHint}${reason}
+    </div>
+    <div class="fit">${it.fit[L]}</div>${link}
+  </article>`;
+}
+function render(){
+  const t=T();
+  const visible=DATA.filter(passesFilters);
+  const b={open:[],verify:[],later:[],closed:[],info:[]};
+  visible.forEach(it=>b[statusFor(it,state.permit)].push(it));
+  const opensHigher=b.closed.filter(it=>it.permits.length>0);
+  const mismatch=b.closed.filter(it=>it.permits.length===0);
+
+  const tally=document.getElementById("tally");
+  tally.innerHTML = visible.length===0 ? t.tallyEmpty : t.tally(state.permit,b.open.length,b.verify.length,visible.length);
+
+  const groups=[["open","open",t.gOpen],["verify","verify",t.gVerify],["later","later",t.gLater],["closed","closed",t.gClosed],["info","info",t.gInfo]];
+  let html="";
+  for(const [key,cls,title] of groups){
+    const items = key==="closed"?opensHigher:b[key];
+    if(!items.length) continue;
+    html+=`<div class="grouphead"><span class="dot ${cls}"></span><h2>${title}</h2><span class="count">${items.length}</span><span class="rule"></span></div>`;
+    html+=`<div class="grid">${items.map(it=>cardHTML(it,key)).join("")}</div>`;
+  }
+  if(mismatch.length){
+    html+=`<details class="mismatch-wrap"><summary>${t.mismatch(mismatch.length)}</summary><div class="grid">${mismatch.map(it=>cardHTML(it,"closed")).join("")}</div></details>`;
+  }
+  if(visible.length===0){
+    html=`<div class="empty"><h2>${t.emptyH}</h2><p>${t.emptyP}</p></div>`;
+  }
+  document.getElementById("results").innerHTML=html;
+}
+function applyI18n(){
+  const t=T();
+  document.documentElement.lang=state.lang;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{el.innerHTML=t[el.dataset.i18n]??"";});
+  document.querySelectorAll("[data-i18n-ph]").forEach(el=>{el.placeholder=t[el.dataset.i18nPh]??"";});
+}
+
+// wiring
+function seg(id,key){document.getElementById(id).addEventListener("click",e=>{const btn=e.target.closest("button");if(!btn)return;
+  document.querySelectorAll(`#${id} button`).forEach(x=>x.setAttribute("aria-pressed","false"));btn.setAttribute("aria-pressed","true");
+  state[key]=btn.dataset[key];render();});}
+document.getElementById("permits").addEventListener("click",e=>{const b=e.target.closest(".permit");if(!b)return;
+  document.querySelectorAll("#permits .permit").forEach(x=>x.setAttribute("aria-pressed","false"));b.setAttribute("aria-pressed","true");
+  state.permit=b.dataset.permit;render();});
+document.getElementById("lang").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  document.querySelectorAll("#lang button").forEach(x=>x.setAttribute("aria-pressed","false"));b.setAttribute("aria-pressed","true");
+  state.lang=b.dataset.lang;applyI18n();render();});
+seg("field","field");seg("loc","loc");
+document.getElementById("womenOnly").addEventListener("change",e=>{state.women=e.target.checked;render();});
+document.getElementById("moveOn").addEventListener("change",e=>{state.move=e.target.checked;render();});
+document.getElementById("q").addEventListener("input",e=>{state.q=e.target.value;render();});
+
+applyI18n();render();
+</script>
+</body>
+</html>
